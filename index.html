@@ -1,302 +1,354 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Annotate UI</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <style>
-        body {
-            background-color: #f9f9f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .pill-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-        }
-        .pill {
-            padding: 8px 12px;
-            background-color: #e6f4ff;
-            border-radius: 8px;
-            font-size: 14px;
-            color: #000;
-            display: flex;
-            align-items: center;
-        }
-        .pill span {
-            cursor: pointer;
-            margin-left: 5px;
-            color: red;
-        }
-        .button-group .btn {
-            flex: 1;
-        }
-        .tag {
-            padding: 8px 12px;
-            background-color: #e6f4ff;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        .tag.active {
-            background-color: #007aff;
-            color: #fff;
-        }
-        .activity-group, .other-factors {
-            max-height: 150px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Annotate UI</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Axios -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <style>
+    body {
+      background-color: #f9f9f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .pill-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .pill {
+      padding: 8px 12px;
+      background-color: #e6f4ff;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #000;
+      display: flex;
+      align-items: center;
+    }
+
+    .pill span {
+      cursor: pointer;
+      margin-left: 5px;
+      color: red;
+    }
+
+    .button-group .btn {
+      flex: 1;
+    }
+
+    .tag {
+      padding: 8px 12px;
+      background-color: #e6f4ff;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .tag.active {
+      background-color: #007aff;
+      color: #fff;
+    }
+
+    .activity-group,
+    .other-factors {
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+  </style>
 </head>
+
 <body>
-
-<div class="container">
+  <div class="container">
     <h1 class="text-center">Annotate</h1>
-    
+
     <div class="mb-3">
-        <input type="text" id="name" class="form-control" placeholder="NAME">
-        <div class="pill-container mt-2" id="device-pill-container"></div>
-        <input type="text" id="device-id" class="form-control" placeholder="Device ID">
+      <input type="text" id="name" class="form-control" placeholder="NAME" />
+      <div class="pill-container mt-2" id="device-pill-container"></div>
+      <input type="text" id="device-id" class="form-control" placeholder="Device ID" />
     </div>
 
     <div class="mb-3">
-        <h5>Timing</h5>
-        <div class="button-group d-flex">
-            <button class="btn btn-primary" id="now-button">NOW</button>
-            <button class="btn btn-outline-primary" id="custom-button">Custom</button>
-        </div>
-        <input type="datetime-local" id="custom-time" class="form-control mt-2 d-none">
+      <h5>Timing</h5>
+      <div class="button-group d-flex">
+        <button class="btn btn-primary" id="now-button">NOW</button>
+        <button class="btn btn-outline-primary" id="custom-button">Custom</button>
+      </div>
+      <input type="datetime-local" id="custom-time" class="form-control mt-2 d-none" />
+      <button class="btn btn-success mt-2 d-none" id="custom-ok-button">OK</button>
+      <button class="btn btn-danger mt-2 d-none" id="custom-cancel-button">Cancel</button>
     </div>
 
     <div class="mb-3">
-        <h5>Annotate</h5>
-        <div id="condition-tags" class="activity-group">
-            <div class="tag active">AC</div>
-            <div class="tag">Fan</div>
-            <div class="tag">Window</div>
-            <div class="tag">+</div>
-        </div>
+      <h5>Annotate</h5>
+      <div class="scrollable-div" id="condition-tags"></div>
+      <button class="btn btn-primary mt-2" id="add-condition">+</button>
+      <div id="condition-input" class="mt-2 d-none">
+        <input type="text" id="new-condition" class="form-control" placeholder="Enter new condition" />
+        <button class="btn btn-success mt-1" id="ok-button">OK</button>
+        <button class="btn btn-danger mt-1" id="cancel-button">Cancel</button>
+      </div>
     </div>
 
     <div class="mb-3">
-        <h5>Activity</h5>
-        <div class="activity-group">
-            <div class="activity-dropdown">
-                <select class="form-select activity-select">
-                    <option>Select ONE</option>
-                    <option>Smoking Cigarette</option>
-                    <option>Other Activity</option>
-                </select>
-                <div class="d-flex justify-content-end mt-1">
-                    <button class="btn btn-sm btn-success confirm-btn">OK</button>
-                    <button class="btn btn-sm btn-danger ms-2 cancel-btn">Cancel</button>
-                </div>
-            </div>
+      <h5>Activity</h5>
+      <div class="activity-group" id="activity-group">
+        <div class="activity-dropdown">
+          <select class="form-select activity-select" id="activity-select">
+            <option>Select ONE</option>
+            <option>Smoking Cigarette</option>
+            <option>Other Activity</option>
+          </select>
         </div>
-        <button class="btn btn-outline-primary mt-2" id="add-activity">+ Add Parallel Activity</button>
+      </div>
+      <button class="btn btn-outline-primary mt-2" id="add-activity">+ Add Parallel Activity</button>
     </div>
 
     <div class="mb-3">
-        <h5>Other Factors</h5>
-        <div class="other-factors">
-            <div class="d-flex mb-2">
-                <select class="form-select me-2">
-                    <option>Temperature</option>
-                    <option>Humidity</option>
-                </select>
-                <input type="text" class="form-control" placeholder="Value">
-            </div>
-        </div>
-        <button class="btn btn-outline-primary" id="add-factor">+ Add Factor</button>
+      <h5>Other Factors</h5>
+      <div class="other-factors" id="other-factors"></div>
+      <button class="btn btn-outline-primary" id="add-factor">+ Add Factor</button>
     </div>
 
     <button class="btn btn-success w-100 mb-2" id="save">SAVE</button>
     <button class="btn btn-danger w-100" id="clear">CLEAR FORM</button>
-</div>
+  </div>
 
-<script>
+  <script>
     document.addEventListener("DOMContentLoaded", () => {
-        let deviceIds = [];
-        const nameInput = document.getElementById("name");
-        const deviceInput = document.getElementById("device-id");
-        const deviceContainer = document.getElementById("device-pill-container");
-        const nowButton = document.getElementById("now-button");
-        const customButton = document.getElementById("custom-button");
-        const customTimeInput = document.getElementById("custom-time");
-        const conditionTags = document.getElementById("condition-tags");
-        const activitySelect = document.getElementById("activity-select");
-        const addActivityButton = document.getElementById("add-activity");
-        const saveButton = document.getElementById("save");
-        const clearButton = document.getElementById("clear");
+      let device_ids = [];
+      let activities = [];
+      let conditionArray = ["AC", "Fan", "Window"];
+      let activeConditions = new Set();
+      let timestamp = null;  // This will hold the selected timestamp
 
-        deviceInput.addEventListener("keyup", (e) => {
-            if (e.key === " " || e.key === ",") {
-                const value = deviceInput.value.trim();
-                if (value) {
-                    deviceIds.push(value);
-                    updateDevicePills();
-                }
-                deviceInput.value = "";
+      const nameInput = document.getElementById("name");
+      const deviceInput = document.getElementById("device-id");
+      const deviceContainer = document.getElementById("device-pill-container");
+      const conditionTags = document.getElementById("condition-tags");
+      const addConditionButton = document.getElementById("add-condition");
+      const conditionInputDiv = document.getElementById("condition-input");
+      const newConditionInput = document.getElementById("new-condition");
+      const okButton = document.getElementById("ok-button");
+      const cancelButton = document.getElementById("cancel-button");
+      const addFactorButton = document.getElementById("add-factor");
+      const otherFactorsDiv = document.getElementById("other-factors");
+      const activityGroup = document.getElementById("activity-group");
+      const addActivityButton = document.getElementById("add-activity");
+      const saveButton = document.getElementById("save");
+      const clearButton = document.getElementById("clear");
+
+      // Elements for timestamp
+      const nowButton = document.getElementById("now-button");
+      const customButton = document.getElementById("custom-button");
+      const timestampDisplay = document.getElementById("timestamp-display"); // To display the selected timestamp
+
+      function updateDevicePills() {
+        deviceContainer.innerHTML = "";
+        device_ids.forEach((id, index) => {
+          const pill = document.createElement("div");
+          pill.classList.add("pill");
+          pill.innerHTML = `${id} <span data-index="${index}">&times;</span>`;
+          pill.querySelector("span").addEventListener("click", () => {
+            device_ids.splice(index, 1);
+            updateDevicePills();
+          });
+          deviceContainer.appendChild(pill);
+        });
+      }
+
+      deviceInput.addEventListener("keydown", (event) => {
+        if (event.key === " " || event.key === ",") {
+          event.preventDefault();
+          let newDeviceId = deviceInput.value.trim();
+          if (newDeviceId && !device_ids.includes(newDeviceId)) {
+            device_ids.push(newDeviceId);
+            updateDevicePills();
+          }
+          deviceInput.value = "";
+        }
+      });
+
+      function updateConditions() {
+        conditionTags.innerHTML = "";
+        conditionArray.forEach((condition) => {
+          const tag = document.createElement("div");
+          tag.classList.add("tag");
+          tag.innerText = condition;
+          tag.style.backgroundColor = activeConditions.has(condition) ? "blue" : "grey";
+          tag.style.color = "white";
+          tag.style.padding = "5px";
+          tag.style.margin = "3px";
+          tag.style.cursor = "pointer";
+          tag.addEventListener("click", () => {
+            if (activeConditions.has(condition)) {
+              activeConditions.delete(condition);
+            } else {
+              activeConditions.add(condition);
             }
+            updateConditions();
+          });
+          conditionTags.appendChild(tag);
+        });
+      }
+
+      updateConditions();
+
+      addConditionButton.addEventListener("click", () => {
+        conditionInputDiv.classList.toggle("d-none");
+      });
+
+      okButton.addEventListener("click", () => {
+        const newCondition = newConditionInput.value.trim();
+        if (newCondition && !conditionArray.includes(newCondition)) {
+          conditionArray.push(newCondition);
+          updateConditions();
+        }
+        newConditionInput.value = "";
+        conditionInputDiv.classList.add("d-none");
+      });
+
+      cancelButton.addEventListener("click", () => {
+        newConditionInput.value = "";
+        conditionInputDiv.classList.add("d-none");
+      });
+
+      addFactorButton.addEventListener("click", () => {
+        const factorDiv = document.createElement("div");
+        factorDiv.classList.add("d-flex", "mb-2");
+
+        factorDiv.innerHTML = `
+      <select class="form-select me-2 factor-key">
+        <option value="">Select Factor</option>
+        <option>Temperature</option>
+        <option>Humidity</option>
+      </select>
+      <input type="text" class="form-control factor-value" placeholder="Value">
+      <button class="btn btn-danger ms-2 remove-factor">X</button>
+    `;
+
+        factorDiv.querySelector(".remove-factor").addEventListener("click", () => {
+          otherFactorsDiv.removeChild(factorDiv);
         });
 
-        function updateDevicePills() {
-            deviceContainer.innerHTML = "";
-            deviceIds.forEach((id, index) => {
-                const pill = document.createElement("div");
-                pill.classList.add("pill");
-                pill.innerHTML = `${id} <span onclick="removeDevice(${index})">×</span>`;
-                deviceContainer.appendChild(pill);
-            });
-        }
+        otherFactorsDiv.appendChild(factorDiv);
+      });
 
-        window.removeDevice = (index) => {
-            deviceIds.splice(index, 1);
-            updateDevicePills();
+      function createActivityDropdown() {
+        const activityDiv = document.createElement("div");
+        activityDiv.classList.add("activity-item", "d-flex", "mb-2");
+
+        const select = document.createElement("select");
+        select.classList.add("form-select", "me-2", "activity-select");
+
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.innerText = "Select ONE";
+        defaultOption.style.color = "gray";
+        select.appendChild(defaultOption);
+
+        ["Smoking Cigarette", "Running", "Reading", "Talking"].forEach(activity => {
+          const option = document.createElement("option");
+          option.value = activity;
+          option.innerText = activity;
+          select.appendChild(option);
+        });
+
+        const okButton = document.createElement("button");
+        okButton.classList.add("btn", "btn-success", "me-2");
+        okButton.innerText = "OK";
+
+        const cancelButton = document.createElement("button");
+        cancelButton.classList.add("btn", "btn-danger");
+        cancelButton.innerText = "Cancel";
+
+        activityDiv.appendChild(select);
+        activityDiv.appendChild(okButton);
+        activityDiv.appendChild(cancelButton);
+        activityGroup.appendChild(activityDiv);
+
+        okButton.addEventListener("click", () => {
+          const selectedValue = select.value;
+          if (selectedValue && selectedValue !== "Select ONE") {
+            if (!activities.includes(selectedValue)) {
+              activities.push(selectedValue);
+            }
+          }
+        });
+
+        cancelButton.addEventListener("click", () => {
+          activityGroup.removeChild(activityDiv);
+        });
+      }
+
+      addActivityButton.addEventListener("click", createActivityDropdown);
+
+      saveButton.addEventListener("click", () => {
+        const device = {
+          name: nameInput.value,
+          device_ids,
+          conditions: [...activeConditions],
+          factors: [...otherFactorsDiv.querySelectorAll(".factor-value")].map(input => input.value),
+          activities,
+          timestamp
         };
 
-        nowButton.addEventListener("click", () => {
-            nowButton.classList.add("btn-primary");
-            nowButton.classList.remove("btn-outline-primary");
-            customButton.classList.add("btn-outline-primary");
-            customButton.classList.remove("btn-primary");
-            customTimeInput.classList.add("d-none");
-        });
+        axios.post("http://localhost:5000/save", device)
+          .then(() => console.log("Data saved successfully"))
+          .catch(err => console.error("Error saving data:", err));
+      });
 
-        customButton.addEventListener("click", () => {
-            nowButton.classList.add("btn-outline-primary");
-            nowButton.classList.remove("btn-primary");
-            customButton.classList.add("btn-primary");
-            customButton.classList.remove("btn-outline-primary");
-            customTimeInput.classList.remove("d-none");
-        });
+      clearButton.addEventListener("click", () => {
+        nameInput.value = "";
+        device_ids = [];
+        activities = [];
+        deviceInput.value = "";
+        activityGroup.innerHTML = "";
+        activeConditions.clear();
+        otherFactorsDiv.innerHTML = "";
+        updateConditions();
+        updateDevicePills();
+      });
 
-        saveButton.addEventListener("click", () => {
-            const annotationData = {
-                name: nameInput.value,
-                deviceIds,
-                timestamp: customTimeInput.classList.contains("d-none") ? new Date().toISOString() : customTimeInput.value,
-                conditions: Array.from(conditionTags.getElementsByClassName("tag active")).map(tag => tag.innerText),
-                activities: activitySelect.value !== "Select ONE" ? [activitySelect.value] : [],
-                peopleCount: 3
-            };
-            axios.post("http://localhost:5000/annotations", annotationData)
-                .then(() => alert("Saved Successfully!"))
-                .catch(() => alert("Error Saving Data"));
-        });
+      // Timestamp Logic
+      nowButton.addEventListener("click", () => {
+        timestamp = new Date().toISOString();  // Set timestamp to current time
+        timestampDisplay.innerText = `Timestamp: ${timestamp}`;
+        customButton.style.backgroundColor = ""; // Reset custom button
+        customButton.disabled = false; // Enable custom button
+      });
 
-        clearButton.addEventListener("click", () => {
-            document.querySelector("form").reset();
-            deviceContainer.innerHTML = "";
-            deviceIds = [];
-        });
+      customButton.addEventListener("click", () => {
+        const customTimestamp = prompt("Enter a custom timestamp (YYYY-MM-DDTHH:MM:SS format):");
+        if (customTimestamp) {
+          timestamp = customTimestamp;  // Set custom timestamp
+          timestampDisplay.innerText = `Timestamp: ${timestamp}`;
+          customButton.style.backgroundColor = "blue"; // Highlight custom button
+        }
+      });
+
     });
-</script>
 
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const activityGroup = document.querySelector(".activity-group");
-        const addActivityButton = document.getElementById("add-activity");
-        let activities = [];
 
-        function updateActivityArray() {
-            activities = Array.from(document.querySelectorAll(".activity-select"))
-                .map(select => select.value)
-                .filter(value => value !== "Select ONE");
-            console.log("Activities:", activities);
-        }
 
-        function addActivityDropdown() {
-            const activityDropdown = document.createElement("div");
-            activityDropdown.classList.add("activity-dropdown", "mt-2");
-            activityDropdown.innerHTML = `
-                <select class="form-select activity-select">
-                    <option>Select ONE</option>
-                    <option>Smoking Cigarette</option>
-                    <option>Other Activity</option>
-                </select>
-                <div class="d-flex justify-content-end mt-1">
-                    <button class="btn btn-sm btn-success confirm-btn">OK</button>
-                    <button class="btn btn-sm btn-danger ms-2 cancel-btn">Cancel</button>
-                </div>
-            `;
-            activityGroup.appendChild(activityDropdown);
-            attachDropdownEvents(activityDropdown);
-        }
-
-        function attachDropdownEvents(dropdownContainer) {
-            const select = dropdownContainer.querySelector(".activity-select");
-            const confirmBtn = dropdownContainer.querySelector(".confirm-btn");
-            const cancelBtn = dropdownContainer.querySelector(".cancel-btn");
-
-            confirmBtn.addEventListener("click", () => {
-                if (select.value !== "Select ONE") {
-                    select.classList.add("border-success");
-                } else {
-                    alert("Please select a valid activity!");
-                }
-                updateActivityArray();
-            });
-
-            cancelBtn.addEventListener("click", () => {
-                dropdownContainer.remove();
-                updateActivityArray();
-            });
-        }
-
-        document.querySelectorAll(".activity-dropdown").forEach(attachDropdownEvents);
-
-        addActivityButton.addEventListener("click", addActivityDropdown);
-    });
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const activityGroup = document.getElementById("activity-group");
-        const addActivityButton = document.getElementById("add-activity");
-
-        function addActivityDropdown() {
-            const activityDropdown = document.createElement("div");
-            activityDropdown.classList.add("activity-dropdown");
-
-            activityDropdown.innerHTML = `
-                <div class="d-flex">
-                    <select class="form-select activity-select">
-                        <option>Select ONE</option>
-                        <option>Smoking Cigarette</option>
-                        <option>Reading</option>
-                        <option>Exercising</option>
-                        <option>Listening to Music</option>
-                    </select>
-                    <button class="btn btn-sm btn-danger ms-2 remove-btn">X</button>
-                </div>
-            `;
-
-            activityGroup.appendChild(activityDropdown);
-
-            // Remove the dropdown when "X" is clicked
-            activityDropdown.querySelector(".remove-btn").addEventListener("click", () => {
-                activityDropdown.remove();
-            });
-        }
-
-        addActivityButton.addEventListener("click", addActivityDropdown);
-    });
-</script>
-
+  </script>
 </body>
+
 </html>
