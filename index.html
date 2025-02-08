@@ -59,7 +59,7 @@
     }
 
     .tag.active {
-      background-color: #007aff;
+      background-color: #00d9ff;
       color: #fff;
     }
 
@@ -71,6 +71,15 @@
       padding: 10px;
       border-radius: 8px;
       margin-bottom: 16px;
+    }
+
+    .active {
+      background-color: #007aff;
+      color: white;
+    }
+
+    .d-none {
+      display: none;
     }
   </style>
 </head>
@@ -158,7 +167,7 @@
       // Elements for timestamp
       const nowButton = document.getElementById("now-button");
       const customButton = document.getElementById("custom-button");
-      const timestampDisplay = document.getElementById("timestamp-display"); // To display the selected timestamp
+      const customTimeInput = document.getElementById("custom-time");
 
       function updateDevicePills() {
         deviceContainer.innerHTML = "";
@@ -234,7 +243,7 @@
         const factorDiv = document.createElement("div");
         factorDiv.classList.add("d-flex", "mb-2");
 
-        factorDiv.innerHTML = `
+        factorDiv.innerHTML = ` 
       <select class="form-select me-2 factor-key">
         <option value="">Select Factor</option>
         <option>Temperature</option>
@@ -330,24 +339,22 @@
       // Timestamp Logic
       nowButton.addEventListener("click", () => {
         timestamp = new Date().toISOString();  // Set timestamp to current time
-        timestampDisplay.innerText = `Timestamp: ${timestamp}`;
-        customButton.style.backgroundColor = ""; // Reset custom button
+        customButton.classList.remove("active"); // Remove highlight from custom
         customButton.disabled = false; // Enable custom button
+        nowButton.classList.add("active"); // Highlight NOW button
+        customTimeInput.classList.add("d-none"); // Hide custom datetime picker
       });
 
       customButton.addEventListener("click", () => {
-        const customTimestamp = prompt("Enter a custom timestamp (YYYY-MM-DDTHH:MM:SS format):");
-        if (customTimestamp) {
-          timestamp = customTimestamp;  // Set custom timestamp
-          timestampDisplay.innerText = `Timestamp: ${timestamp}`;
-          customButton.style.backgroundColor = "blue"; // Highlight custom button
-        }
+        customButton.classList.add("active"); // Highlight Custom button
+        nowButton.classList.remove("active"); // Remove highlight from NOW
+        customTimeInput.classList.remove("d-none"); // Show custom datetime picker
       });
 
+      customTimeInput.addEventListener("change", (event) => {
+        timestamp = new Date(event.target.value).toISOString();
+      });
     });
-
-
-
   </script>
 </body>
 
