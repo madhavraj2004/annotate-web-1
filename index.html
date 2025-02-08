@@ -347,8 +347,9 @@ nowButton.addEventListener("click", () => {
 });
 
 customButton.addEventListener("click", () => {
-    customButton.classList.add("active");  // Highlight Custom button
-    nowButton.classList.remove("active");  // Unhighlight NOW button
+        nowButton.classList.remove("active");  // Unhighlight NOW button
+  customButton.classList.add("active");  // Highlight Custom button
+
     customTimeInput.classList.remove("d-none");  // Show custom datetime picker
 });
 
