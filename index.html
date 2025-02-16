@@ -112,7 +112,11 @@
 
     <div class="mb-3">
       <h5>Annotate</h5>
-      <div class="scrollable-div" id="condition-tags"></div>
+      <div class="scrollable-div" id="condition-tags">
+        <div id="condition-container">
+          <h6>Conditions</h6>
+        </div>
+      </div>
       <button class="btn btn-primary mt-2" id="add-condition">+ Add Condition</button>
     </div>
 
@@ -123,11 +127,7 @@
       </div>
     </div>
 
-    <div class="mb-3">
-      <h5>Other Factors</h5>
-      <div class="other-factors" id="other-factors"></div>
-      <button class="btn btn-outline-primary" id="add-factor">+ Add Factor</button>
-    </div>
+    <button class="btn btn-outline-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#otherFactorsModal">+ Add Other Factors</button>
 
     <button class="btn btn-success w-100 mb-2" id="save">SAVE</button>
     <button class="btn btn-danger w-100" id="clear">CLEAR FORM</button>
@@ -170,6 +170,25 @@
         <div class="modal-footer">
           <button class="btn btn-primary" id="okActivity">OK</button>
           <button class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Other Factors Modal -->
+  <div class="modal fade" id="otherFactorsModal" tabindex="-1" aria-labelledby="otherFactorsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="otherFactorsModalLabel">Add Other Factors</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="other-factors" id="other-factors"></div>
+          <button class="btn btn-primary" id="add-factor">+ Add Factor</button>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-danger" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
@@ -230,25 +249,32 @@
       });
 
       function updateConditions() {
-        conditionTags.innerHTML = "";
+        const conditionContainer = document.getElementById("condition-container");
+        conditionContainer.innerHTML = ""; // Clear previous conditions
         conditionArray.forEach((condition) => {
-          const tag = document.createElement("div");
-          tag.classList.add("tag");
-          tag.innerText = condition;
-          tag.style.backgroundColor = activeConditions.has(condition) ? "blue" : "grey";
-          tag.style.color = "white";
-          tag.style.padding = "5px";
-          tag.style.margin = "3px";
-          tag.style.cursor = "pointer";
-          tag.addEventListener("click", () => {
+          const conditionDiv = document.createElement("div");
+          conditionDiv.classList.add("d-flex", "justify-content-between", "align-items-center", "mb-1");
+          conditionDiv.innerHTML = `
+            <span class="tag">${condition}</span>
+            <button class="btn btn-danger btn-sm remove-condition">X</button>
+          `;
+          conditionDiv.querySelector(".tag").style.backgroundColor = activeConditions.has(condition) ? "blue" : "grey";
+          conditionDiv.querySelector(".tag").style.color = "white";
+          conditionDiv.querySelector(".tag").addEventListener("click", () => {
             if (activeConditions.has(condition)) {
               activeConditions.delete(condition);
+              conditionDiv.querySelector(".tag").style.textDecoration = "line-through"; // Mark as deselected
             } else {
               activeConditions.add(condition);
+              conditionDiv.querySelector(".tag").style.textDecoration = "none"; // Mark as selected
             }
-            updateConditions();
           });
-          conditionTags.appendChild(tag);
+          conditionDiv.querySelector(".remove-condition").addEventListener("click", () => {
+            activeConditions.delete(condition); // Remove from active conditions
+            conditionArray = conditionArray.filter(c => c !== condition); // Remove from condition array
+            updateConditions(); // Update UI
+          });
+          conditionContainer.appendChild(conditionDiv);
         });
       }
 
@@ -326,24 +352,37 @@
         const input = activityInput.value.trim();
         if (input) {
           const tempDiv = document.createElement("div");
-          tempDiv.classList.add("form-check");
+          tempDiv.classList.add("form-check", "d-flex", "justify-content-between", "align-items-center");
           tempDiv.innerHTML = `
-            <input class="form-check-input" type="radio" name="activityRadio" id="${input}" value="${input}">
-            <label class="form-check-label" for="${input}">${input}</label>
+            <span class="tag">${input}</span>
+            <button class="btn btn-danger btn-sm remove-activity">X</button>
           `;
+          tempDiv.querySelector(".remove-activity").addEventListener("click", () => {
+            tempActivityList.removeChild(tempDiv);
+          });
           tempActivityList.appendChild(tempDiv);
           activityInput.value = ""; // Clear input
         }
       });
 
       okActivity.addEventListener("click", () => {
-        const selected = document.querySelector('input[name="activityRadio"]:checked');
-        if (selected) {
-          activities.push(selected.value);
+        const selectedActivities = [...tempActivityList.querySelectorAll('.tag')].map(tag => tag.innerText);
+        selectedActivities.forEach(activity => {
+          activities.push(activity);
           const activityDiv = document.createElement("div");
-          activityDiv.innerText = selected.value;
+          activityDiv.classList.add("d-flex", "justify-content-between", "align-items-center");
+          activityDiv.innerHTML = `
+            <span>${activity}</span>
+            <button class="btn btn-danger btn-sm remove-activity">X</button>
+          `;
+          activityDiv.querySelector(".remove-activity").addEventListener("click", () => {
+            activities = activities.filter(a => a !== activity);
+            activityGroup.removeChild(activityDiv);
+          });
           activityGroup.appendChild(activityDiv);
-        }
+        });
+        const activityModal = bootstrap.Modal.getInstance(document.getElementById('activityModal'));
+        activityModal.hide();
       });
 
       saveButton.addEventListener("click", () => {
