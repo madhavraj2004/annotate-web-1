@@ -215,6 +215,10 @@
           <button class="btn btn-outline-primary w-100 factor-option" data-factor="Humidity">Humidity</button>
           <button class="btn btn-outline-primary w-100 factor-option" data-factor="Pressure">Pressure</button>
           <button class="btn btn-outline-primary w-100 factor-option" data-factor="Light">Light</button>
+          <hr>
+          <h6>Add Custom Factor</h6>
+          <input type="text" id="customFactorInput" class="form-control mb-2" placeholder="Custom Factor" />
+          <button class="btn btn-success w-100" id="addCustomFactor">Add Custom Factor</button>
         </div>
       </div>
     </div>
@@ -379,6 +383,21 @@
           const selectFactorModal = bootstrap.Modal.getInstance(document.getElementById('selectFactorModal'));
           selectFactorModal.hide(); // Close select factor modal
         });
+      });
+
+      // Add Custom Factor Logic
+      const customFactorInput = document.getElementById("customFactorInput");
+      const addCustomFactorButton = document.getElementById("addCustomFactor");
+
+      addCustomFactorButton.addEventListener("click", () => {
+        const customFactor = customFactorInput.value.trim();
+        if (customFactor) {
+          factorValueInput.dataset.selectedFactor = customFactor; // Store custom factor
+          factorValueInput.value = customFactor; // Display custom factor in input
+          customFactorInput.value = ""; // Clear input
+          const selectFactorModal = bootstrap.Modal.getInstance(document.getElementById('selectFactorModal'));
+          selectFactorModal.hide(); // Close select factor modal
+        }
       });
 
       // Activity Modal Logic
