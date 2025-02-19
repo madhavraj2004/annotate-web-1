@@ -130,7 +130,11 @@
       </div>
     </div>
 
-    <button class="btn btn-outline-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#otherFactorsModal">+ Add Other Factors</button>
+    <div class="mb-3">
+      <h5>Other Factors</h5>
+      <div class="other-factors" id="other-factors"></div>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFactorModal">+ Add Factor</button>
+    </div>
 
     <button class="btn btn-success w-100 mb-2" id="save">SAVE</button>
     <button class="btn btn-danger w-100" id="clear">CLEAR FORM</button>
@@ -178,20 +182,27 @@
     </div>
   </div>
 
-  <!-- Other Factors Modal -->
-  <div class="modal fade" id="otherFactorsModal" tabindex="-1" aria-labelledby="otherFactorsModalLabel" aria-hidden="true">
+  <!-- Add Factor Modal -->
+  <div class="modal fade" id="addFactorModal" tabindex="-1" aria-labelledby="addFactorModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="otherFactorsModalLabel">Add Other Factors</h5>
+          <h5 class="modal-title" id="addFactorModalLabel">Add Factor</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <div class="other-factors" id="other-factors"></div>
-          <button class="btn btn-primary" id="add-factor">+ Add Factor</button>
+          <select class="form-select mb-2" id="factorKey">
+            <option value="">Select Factor</option>
+            <option>Temperature</option>
+            <option>Humidity</option>
+            <option>Pressure</option>
+            <option>Light</option>
+          </select>
+          <input type="text" class="form-control" id="factorValue" placeholder="Value">
         </div>
         <div class="modal-footer">
-          <button class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+          <button class="btn btn-primary" id="confirmAddFactor">Add Factor</button>
+          <button class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
         </div>
       </div>
     </div>
@@ -214,9 +225,7 @@
       const newConditionInput = document.getElementById("newConditionInput");
       const addNewConditionButton = document.getElementById("addNewCondition");
       const okConditionButton = document.getElementById("okCondition");
-      const addFactorButton = document.getElementById("add-factor");
       const otherFactorsDiv = document.getElementById("other-factors");
-      const activityGroup = document.getElementById("activity-group");
       const saveButton = document.getElementById("save");
       const clearButton = document.getElementById("clear");
 
@@ -324,25 +333,30 @@
         conditionModal.hide();
       });
 
-      addFactorButton.addEventListener("click", () => {
-        const factorDiv = document.createElement("div");
-        factorDiv.classList.add("d-flex", "mb-2");
+      // Add Factor Modal Logic
+      const factorKeySelect = document.getElementById("factorKey");
+      const factorValueInput = document.getElementById("factorValue");
+      const confirmAddFactorButton = document.getElementById("confirmAddFactor");
 
-        factorDiv.innerHTML = `
-          <select class="form-select me-2 factor-key">
-            <option value="">Select Factor</option>
-            <option>Temperature</option>
-            <option>Humidity</option>
-          </select>
-          <input type="text" class="form-control factor-value" placeholder="Value">
-          <button class="btn btn-danger ms-2 remove-factor">X</button>
-        `;
-
-        factorDiv.querySelector(".remove-factor").addEventListener("click", () => {
-          otherFactorsDiv.removeChild(factorDiv);
-        });
-
-        otherFactorsDiv.appendChild(factorDiv);
+      confirmAddFactorButton.addEventListener("click", () => {
+        const key = factorKeySelect.value;
+        const value = factorValueInput.value.trim();
+        if (key && value) {
+          const factorDiv = document.createElement("div");
+          factorDiv.classList.add("d-flex", "justify-content-between", "align-items-center", "mb-2");
+          factorDiv.innerHTML = `
+            <span>${key}: ${value}</span>
+            <button class="btn btn-danger btn-sm remove-factor">X</button>
+          `;
+          factorDiv.querySelector(".remove-factor").addEventListener("click", () => {
+            otherFactorsDiv.removeChild(factorDiv);
+          });
+          otherFactorsDiv.appendChild(factorDiv);
+          factorKeySelect.value = ""; // Reset dropdown
+          factorValueInput.value = ""; // Reset input
+          const addFactorModal = bootstrap.Modal.getInstance(document.getElementById('addFactorModal'));
+          addFactorModal.hide(); // Close modal
+        }
       });
 
       // Activity Modal Logic
@@ -393,7 +407,10 @@
           name: nameInput.value,
           device_ids,
           conditions: [...activeConditions],
-          factors: [...otherFactorsDiv.querySelectorAll(".factor-value")].map(input => input.value),
+          factors: [...otherFactorsDiv.querySelectorAll(".factor-value")].map(input => ({
+            key: input.previousElementSibling.value,
+            value: input.value
+          })).filter(factor => factor.key && factor.value),
           activities,
           timestamp
         };
