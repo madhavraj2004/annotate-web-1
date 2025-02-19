@@ -191,18 +191,30 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <select class="form-select mb-2" id="factorKey">
-            <option value="">Select Factor</option>
-            <option>Temperature</option>
-            <option>Humidity</option>
-            <option>Pressure</option>
-            <option>Light</option>
-          </select>
-          <input type="text" class="form-control" id="factorValue" placeholder="Value">
+          <button class="btn btn-secondary w-100" data-bs-toggle="modal" data-bs-target="#selectFactorModal">Select Factor</button>
+          <input type="text" class="form-control mt-2" id="factorValue" placeholder="Value">
         </div>
         <div class="modal-footer">
           <button class="btn btn-primary" id="confirmAddFactor">Add Factor</button>
           <button class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Select Factor Modal -->
+  <div class="modal fade" id="selectFactorModal" tabindex="-1" aria-labelledby="selectFactorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="selectFactorModalLabel">Select Factor</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <button class="btn btn-outline-primary w-100 factor-option" data-factor="Temperature">Temperature</button>
+          <button class="btn btn-outline-primary w-100 factor-option" data-factor="Humidity">Humidity</button>
+          <button class="btn btn-outline-primary w-100 factor-option" data-factor="Pressure">Pressure</button>
+          <button class="btn btn-outline-primary w-100 factor-option" data-factor="Light">Light</button>
         </div>
       </div>
     </div>
@@ -334,12 +346,11 @@
       });
 
       // Add Factor Modal Logic
-      const factorKeySelect = document.getElementById("factorKey");
       const factorValueInput = document.getElementById("factorValue");
       const confirmAddFactorButton = document.getElementById("confirmAddFactor");
 
       confirmAddFactorButton.addEventListener("click", () => {
-        const key = factorKeySelect.value;
+        const key = factorValueInput.dataset.selectedFactor;
         const value = factorValueInput.value.trim();
         if (key && value) {
           const factorDiv = document.createElement("div");
@@ -352,11 +363,22 @@
             otherFactorsDiv.removeChild(factorDiv);
           });
           otherFactorsDiv.appendChild(factorDiv);
-          factorKeySelect.value = ""; // Reset dropdown
           factorValueInput.value = ""; // Reset input
           const addFactorModal = bootstrap.Modal.getInstance(document.getElementById('addFactorModal'));
           addFactorModal.hide(); // Close modal
         }
+      });
+
+      // Select Factor Modal Logic
+      const factorOptions = document.querySelectorAll('.factor-option');
+      factorOptions.forEach(option => {
+        option.addEventListener('click', () => {
+          const selectedFactor = option.getAttribute('data-factor');
+          factorValueInput.dataset.selectedFactor = selectedFactor; // Store selected factor
+          factorValueInput.value = selectedFactor; // Display selected factor in input
+          const selectFactorModal = bootstrap.Modal.getInstance(document.getElementById('selectFactorModal'));
+          selectFactorModal.hide(); // Close select factor modal
+        });
       });
 
       // Activity Modal Logic
@@ -407,10 +429,10 @@
           name: nameInput.value,
           device_ids,
           conditions: [...activeConditions],
-          factors: [...otherFactorsDiv.querySelectorAll(".factor-value")].map(input => ({
-            key: input.previousElementSibling.value,
-            value: input.value
-          })).filter(factor => factor.key && factor.value),
+          factors: [...otherFactorsDiv.querySelectorAll("div")].map(div => {
+            const [key, value] = div.querySelector("span").innerText.split(": ");
+            return { key, value };
+          }),
           activities,
           timestamp
         };
