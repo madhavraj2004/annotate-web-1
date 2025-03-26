@@ -1,499 +1,180 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Annotate UI</title>
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <!-- Axios -->
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Record Retrieval Utility</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
   <style>
     body {
-      background-color: #f9f9f9;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      background-color: #f8f9fa;
     }
-
     .container {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      max-width: 800px;
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
     }
-
-    .pill-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-    }
-
-    .pill {
-      padding: 8px 12px;
-      background-color: #e6f4ff;
+    .form-control, .btn {
       border-radius: 8px;
-      font-size: 14px;
-      color: #000;
-      display: flex;
-      align-items: center;
     }
-
-    .pill span {
-      cursor: pointer;
-      margin-left: 5px;
-      color: red;
+    .btn-primary:hover {
+      background-color: #0056b3;
     }
-
-    .button-group .btn {
-      flex: 1;
+    .btn-success:hover {
+      background-color: #218838;
     }
-
-    .tag {
-      padding: 8px 12px;
-      background-color: #e6f4ff;
-      border-radius: 8px;
-      cursor: pointer;
+    .list-group-item:hover {
+      background-color: #e9ecef;
     }
-
-    .tag.active {
-      background-color: #00d9ff;
-      color: #fff;
+    .card {
+      border: none;
+      box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
     }
-
-    .activity-group,
-    .other-factors {
-      max-height: 150px;
-      overflow-y: auto;
-      border: 1px solid #ccc;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 16px;
-    }
-
-    .active {
-      background-color: #007aff;
-      color: white;
-    }
-
-    .d-none {
+    #error-message {
       display: none;
-    }
-
-    .modal-body {
-      max-height: 400px;
-      overflow-y: auto;
     }
   </style>
 </head>
-
 <body>
-  <div class="container">
-    <h1 class="text-center">Annotate</h1>
+  <div class="container mt-5">
+    <h1 class="text-center mb-4 text-primary">📋 Record Retrieval Utility</h1>
 
     <div class="mb-3">
-      <input type="text" id="name" class="form-control" placeholder="NAME" />
-      <div class="pill-container mt-2" id="device-pill-container"></div>
-      <input type="text" id="device-id" class="form-control" placeholder="Device ID" />
-    </div>
-
-    <div class="mb-3">
-      <h5>Timing</h5>
-      <div class="button-group d-flex">
-        <button class="btn btn-outline-primary" id="now-button">NOW</button>
-        <button class="btn btn-outline-primary" id="custom-button">Custom</button>
-      </div>
-      <input type="datetime-local" id="custom-time" class="form-control mt-2 d-none" />
-      <button class="btn btn-success mt-2 d-none" id="custom-ok-button">OK</button>
-      <button class="btn btn-danger mt-2 d-none" id="custom-cancel-button">Cancel</button>
+      <label for="device-id" class="form-label">🔍 Device IDs (Optional, comma-separated):</label>
+      <input type="text" id="device-id" class="form-control" placeholder="Enter Device IDs (e.g., device1, device2)">
     </div>
 
     <div class="mb-3">
-      <h5>Annotate</h5>
-      <div class="border p-3 rounded" style="border: 1px solid #ccc;">
-        <h6>CONDITIONS</h6>
-        <div class="scrollable-div" id="condition-tags">
-          <div id="condition-container">
-            <h6>Conditions</h6>
-          </div>
-        </div>
-        <button class="btn btn-primary mt-2" id="add-condition">+ Add Condition</button>
-      </div>
+      <label for="start-timestamp" class="form-label">📅 Start Timestamp (Optional):</label>
+      <input type="datetime-local" id="start-timestamp" class="form-control">
     </div>
 
     <div class="mb-3">
-      <h5>Activity</h5>
-      <div class="activity-group" id="activity-group">
-        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#activityModal">+ Add Activity</button>
-      </div>
+      <label for="end-timestamp" class="form-label">📅 End Timestamp (Optional):</label>
+      <input type="datetime-local" id="end-timestamp" class="form-control">
     </div>
 
-    <div class="mb-3">
-      <h5>Other Factors</h5>
-      <div class="other-factors" id="other-factors"></div>
-      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFactorModal">+ Add Factor</button>
+    <div class="d-flex justify-content-between">
+      <button id="pull-data" class="btn btn-primary w-100 me-2">🔄 Fetch Records</button>
+      <button id="download-json" class="btn btn-success w-100 d-none">📥 Download JSON</button>
     </div>
 
-    <button class="btn btn-success w-100 mb-2" id="save">SAVE</button>
-    <button class="btn btn-danger w-100" id="clear">CLEAR FORM</button>
-  </div>
+    <div id="error-message" class="alert alert-danger mt-3"></div>
 
-  <!-- Condition Modal -->
-  <div class="modal fade" id="conditionModal" tabindex="-1" aria-labelledby="conditionModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="conditionModalLabel">Select Condition</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div id="existingConditions"></div>
-          <input type="text" id="newConditionInput" class="form-control mb-2" placeholder="Type new condition..." />
-          <button class="btn btn-success w-100" id="addNewCondition">✔ Add</button>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-primary" id="okCondition">OK</button>
-          <button class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
-        </div>
-      </div>
-    </div>
-  </div>
+    <div id="datasets-list" class="list-group mt-3"></div>
 
-  <!-- Activity Modal -->
-  <div class="modal fade" id="activityModal" tabindex="-1" aria-labelledby="activityModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="activityModalLabel">Select Activity</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <input type="text" id="activityInput" class="form-control mb-2" placeholder="Type activity..." />
-          <button class="btn btn-success w-100" id="addActivityTemp">✔ Add</button>
-          <div id="tempActivityList" class="mt-3"></div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-primary" id="okActivity">OK</button>
-          <button class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add Factor Modal -->
-  <div class="modal fade" id="addFactorModal" tabindex="-1" aria-labelledby="addFactorModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="addFactorModalLabel">Add Factor</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <button class="btn btn-secondary w-100" data-bs-toggle="modal" data-bs-target="#selectFactorModal">Select Factor</button>
-          <input type="text" class="form-control mt-2" id="factorValue" placeholder="Value">
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-primary" id="confirmAddFactor">Add Factor</button>
-          <button class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Select Factor Modal -->
-  <div class="modal fade" id="selectFactorModal" tabindex="-1" aria-labelledby="selectFactorModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="selectFactorModalLabel">Select Factor</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <button class="btn btn-outline-primary w-100 factor-option" data-factor="Temperature">Temperature</button>
-          <button class="btn btn-outline-primary w-100 factor-option" data-factor="Humidity">Humidity</button>
-          <button class="btn btn-outline-primary w-100 factor-option" data-factor="Pressure">Pressure</button>
-          <button class="btn btn-outline-primary w-100 factor-option" data-factor="Light">Light</button>
-          <hr>
-          <h6>Add Custom Factor</h6>
-          <input type="text" id="customFactorInput" class="form-control mb-2" placeholder="Custom Factor" />
-          <button class="btn btn-success w-100" id="addCustomFactor">Add Custom Factor</button>
-        </div>
-      </div>
+    <div id="dataset-details" class="mt-4">
+      <h5 class="text-muted text-center">📝 Click a record to preview details.</h5>
     </div>
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      let device_ids = [];
-      let activities = [];
-      let conditionArray = ["AC", "Fan", "Window"];
-      let activeConditions = new Set();
-      let timestamp = null;  // This will hold the selected timestamp
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCSDU3MoCUfcC3Jfn_T-cZ6fqcp2ZUFFMk",
+      authDomain: "ipollusense-52f67.firebaseapp.com",
+      projectId: "ipollusense-52f67",
+      storageBucket: "ipollusense-52f67.appspot.com",
+      messagingSenderId: "733434038670",
+      appId: "1:733434038670:web:7e3d9475fd6310d1afbcdf",
+      measurementId: "G-VHSG19J7HN",
+    };
 
-      const nameInput = document.getElementById("name");
-      const deviceInput = document.getElementById("device-id");
-      const deviceContainer = document.getElementById("device-pill-container");
-      const conditionTags = document.getElementById("condition-tags");
-      const addConditionButton = document.getElementById("add-condition");
-      const existingConditionsDiv = document.getElementById("existingConditions");
-      const newConditionInput = document.getElementById("newConditionInput");
-      const addNewConditionButton = document.getElementById("addNewCondition");
-      const okConditionButton = document.getElementById("okCondition");
-      const otherFactorsDiv = document.getElementById("other-factors");
-      const saveButton = document.getElementById("save");
-      const clearButton = document.getElementById("clear");
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-      // Elements for timestamp
-      const nowButton = document.getElementById("now-button");
-      const customButton = document.getElementById("custom-button");
-      const customTimeInput = document.getElementById("custom-time");
+    let datasets = [];
 
-      function updateDevicePills() {
-        deviceContainer.innerHTML = "";
-        device_ids.forEach((id, index) => {
-          const pill = document.createElement("div");
-          pill.classList.add("pill");
-          pill.innerHTML = `${id} <span data-index="${index}">&times;</span>`;
-          pill.querySelector("span").addEventListener("click", () => {
-            device_ids.splice(index, 1);
-            updateDevicePills();
-          });
-          deviceContainer.appendChild(pill);
+    document.getElementById("pull-data").addEventListener("click", pullData);
+    document.getElementById("download-json").addEventListener("click", downloadJSON);
+
+    async function pullData() {
+      try {
+        const deviceIdsInput = document.getElementById("device-id").value.trim();
+        const startTimestamp = document.getElementById("start-timestamp").value;
+        const endTimestamp = document.getElementById("end-timestamp").value;
+
+        let startDate = startTimestamp ? new Date(startTimestamp) : null;
+        let endDate = endTimestamp ? new Date(endTimestamp) : null;
+
+        // Convert device ID input into an array
+        const deviceIds = deviceIdsInput ? deviceIdsInput.split(",").map(id => id.trim()) : [];
+
+        console.log("Fetching records...");
+        console.log("Device IDs:", deviceIds.length > 0 ? deviceIds : "None");
+        console.log("Start Date:", startDate ? startDate.toISOString() : "None");
+        console.log("End Date:", endDate ? endDate.toISOString() : "None");
+
+        const querySnapshot = await db.collection("devices")
+          .orderBy("timestamp", "desc")
+          .get();
+
+        datasets = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Apply filters
+        datasets = datasets.filter(dataset => {
+          const datasetDate = parseTimestamp(dataset.timestamp);
+          const matchesDeviceId = deviceIds.length > 0 ? deviceIds.some(id => dataset.device_ids?.includes(id)) : true;
+          const matchesStartDate = startDate ? datasetDate >= startDate : true;
+          const matchesEndDate = endDate ? datasetDate <= endDate : true;
+          return matchesDeviceId && matchesStartDate && matchesEndDate;
         });
+
+        if (datasets.length === 0) {
+          document.getElementById("datasets-list").innerHTML = "<p class='text-center text-muted'>No records found.</p>";
+          document.getElementById("download-json").classList.add("d-none");
+          return;
+        }
+
+        displayList();
+        document.getElementById("download-json").classList.remove("d-none");
+
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        document.getElementById("error-message").textContent = "❌ Failed to fetch data. Please try again.";
+        document.getElementById("error-message").style.display = "block";
       }
+    }
 
-      deviceInput.addEventListener("keydown", (event) => {
-        if (event.key === " " || event.key === ",") {
-          event.preventDefault();
-          let newDeviceId = deviceInput.value.trim();
-          if (newDeviceId && !device_ids.includes(newDeviceId)) {
-            device_ids.push(newDeviceId);
-            updateDevicePills();
-          }
-          deviceInput.value = "";
-        }
-      });
+    function parseTimestamp(timestamp) {
+      if (!timestamp) return new Date(0);
+      if (timestamp instanceof firebase.firestore.Timestamp) return timestamp.toDate();
+      if (typeof timestamp === "string") return new Date(timestamp);
+      if (typeof timestamp === "number") return new Date(timestamp);
+      return new Date(0);
+    }
 
-      function updateConditions() {
-        const conditionContainer = document.getElementById("condition-container");
-        conditionContainer.innerHTML = ""; // Clear previous conditions
-        conditionArray.forEach((condition) => {
-          const conditionDiv = document.createElement("div");
-          conditionDiv.classList.add("d-flex", "justify-content-between", "align-items-center", "mb-1");
-          conditionDiv.innerHTML = `
-            <span class="tag">${condition}</span>
-            <button class="btn btn-danger btn-sm remove-condition">X</button>
-          `;
-          conditionDiv.querySelector(".tag").style.backgroundColor = activeConditions.has(condition) ? "blue" : "grey";
-          conditionDiv.querySelector(".tag").style.color = "white";
-          conditionDiv.querySelector(".tag").addEventListener("click", () => {
-            if (activeConditions.has(condition)) {
-              activeConditions.delete(condition);
-              conditionDiv.querySelector(".tag").style.textDecoration = "line-through"; // Mark as deselected
-            } else {
-              activeConditions.add(condition);
-              conditionDiv.querySelector(".tag").style.textDecoration = "none"; // Mark as selected
-            }
-          });
-          conditionDiv.querySelector(".remove-condition").addEventListener("click", () => {
-            activeConditions.delete(condition); // Remove from active conditions
-            conditionArray = conditionArray.filter(c => c !== condition); // Remove from condition array
-            updateConditions(); // Update UI
-          });
-          conditionContainer.appendChild(conditionDiv);
+    function displayList() {
+      const listDiv = document.getElementById("datasets-list");
+      listDiv.innerHTML = "";
+      datasets.forEach(dataset => {
+        const item = document.createElement("a");
+        item.classList.add("list-group-item", "list-group-item-action");
+        item.href = "#";
+        item.dataset.id = dataset.id;
+        item.innerHTML = `<strong>📌 ${dataset.name || "Unnamed"}</strong> - <span class="text-muted">${parseTimestamp(dataset.timestamp).toLocaleString()}</span>`;
+        item.addEventListener("click", (e) => {
+          e.preventDefault();
+          displayDetails(dataset.id);
         });
-      }
-
-      updateConditions();
-
-      addConditionButton.addEventListener("click", () => {
-        existingConditionsDiv.innerHTML = ""; // Clear previous conditions
-        conditionArray.forEach(condition => {
-          const conditionDiv = document.createElement("div");
-          conditionDiv.classList.add("form-check");
-          conditionDiv.innerHTML = `
-            <input class="form-check-input" type="radio" name="conditionRadio" id="${condition}" value="${condition}">
-            <label class="form-check-label" for="${condition}">${condition}</label>
-          `;
-          existingConditionsDiv.appendChild(conditionDiv);
-        });
-        newConditionInput.value = ""; // Clear input
-        const conditionModal = new bootstrap.Modal(document.getElementById('conditionModal'));
-        conditionModal.show();
+        listDiv.appendChild(item);
       });
+    }
 
-      addNewConditionButton.addEventListener("click", () => {
-        const newCondition = newConditionInput.value.trim();
-        if (newCondition && !conditionArray.includes(newCondition)) {
-          conditionArray.push(newCondition);
-          const conditionDiv = document.createElement("div");
-          conditionDiv.classList.add("form-check");
-          conditionDiv.innerHTML = `
-            <input class="form-check-input" type="radio" name="conditionRadio" id="${newCondition}" value="${newCondition}">
-            <label class="form-check-label" for="${newCondition}">${newCondition}</label>
-          `;
-          existingConditionsDiv.appendChild(conditionDiv);
-          newConditionInput.value = ""; // Clear input
-        }
-      });
-
-      okConditionButton.addEventListener("click", () => {
-        const selected = document.querySelector('input[name="conditionRadio"]:checked');
-        if (selected) {
-          activeConditions.add(selected.value);
-          updateConditions();
-        }
-        const conditionModal = bootstrap.Modal.getInstance(document.getElementById('conditionModal'));
-        conditionModal.hide();
-      });
-
-      // Add Factor Modal Logic
-      const factorValueInput = document.getElementById("factorValue");
-      const confirmAddFactorButton = document.getElementById("confirmAddFactor");
-
-      confirmAddFactorButton.addEventListener("click", () => {
-        const key = factorValueInput.dataset.selectedFactor;
-        const value = factorValueInput.value.trim();
-        if (key && value) {
-          const factorDiv = document.createElement("div");
-          factorDiv.classList.add("d-flex", "justify-content-between", "align-items-center", "mb-2");
-          factorDiv.innerHTML = `
-            <span>${key}: ${value}</span>
-            <button class="btn btn-danger btn-sm remove-factor">X</button>
-          `;
-          factorDiv.querySelector(".remove-factor").addEventListener("click", () => {
-            otherFactorsDiv.removeChild(factorDiv);
-          });
-          otherFactorsDiv.appendChild(factorDiv);
-          factorValueInput.value = ""; // Reset input
-          const addFactorModal = bootstrap.Modal.getInstance(document.getElementById('addFactorModal'));
-          addFactorModal.hide(); // Close modal
-        }
-      });
-
-      // Select Factor Modal Logic
-      const factorOptions = document.querySelectorAll('.factor-option');
-      factorOptions.forEach(option => {
-        option.addEventListener('click', () => {
-          const selectedFactor = option.getAttribute('data-factor');
-          factorValueInput.dataset.selectedFactor = selectedFactor; // Store selected factor
-          factorValueInput.value = selectedFactor; // Display selected factor in input
-          const selectFactorModal = bootstrap.Modal.getInstance(document.getElementById('selectFactorModal'));
-          selectFactorModal.hide(); // Close select factor modal
-        });
-      });
-
-      // Add Custom Factor Logic
-      const customFactorInput = document.getElementById("customFactorInput");
-      const addCustomFactorButton = document.getElementById("addCustomFactor");
-
-      addCustomFactorButton.addEventListener("click", () => {
-        const customFactor = customFactorInput.value.trim();
-        if (customFactor) {
-          factorValueInput.dataset.selectedFactor = customFactor; // Store custom factor
-          factorValueInput.value = customFactor; // Display custom factor in input
-          customFactorInput.value = ""; // Clear input
-          const selectFactorModal = bootstrap.Modal.getInstance(document.getElementById('selectFactorModal'));
-          selectFactorModal.hide(); // Close select factor modal
-        }
-      });
-
-      // Activity Modal Logic
-      const activityInput = document.getElementById("activityInput");
-      const addActivityTemp = document.getElementById("addActivityTemp");
-      const tempActivityList = document.getElementById("tempActivityList");
-      const okActivity = document.getElementById("okActivity");
-
-      addActivityTemp.addEventListener("click", () => {
-        const input = activityInput.value.trim();
-        if (input) {
-          const tempDiv = document.createElement("div");
-          tempDiv.classList.add("form-check", "d-flex", "justify-content-between", "align-items-center");
-          tempDiv.innerHTML = `
-            <span class="tag">${input}</span>
-            <button class="btn btn-danger btn-sm remove-activity">X</button>
-          `;
-          tempDiv.querySelector(".remove-activity").addEventListener("click", () => {
-            tempActivityList.removeChild(tempDiv);
-          });
-          tempActivityList.appendChild(tempDiv);
-          activityInput.value = ""; // Clear input
-        }
-      });
-
-      okActivity.addEventListener("click", () => {
-        const selectedActivities = [...tempActivityList.querySelectorAll('.tag')].map(tag => tag.innerText);
-        selectedActivities.forEach(activity => {
-          activities.push(activity);
-          const activityDiv = document.createElement("div");
-          activityDiv.classList.add("d-flex", "justify-content-between", "align-items-center");
-          activityDiv.innerHTML = `
-            <span>${activity}</span>
-            <button class="btn btn-danger btn-sm remove-activity">X</button>
-          `;
-          activityDiv.querySelector(".remove-activity").addEventListener("click", () => {
-            activities = activities.filter(a => a !== activity);
-            activityGroup.removeChild(activityDiv);
-          });
-          activityGroup.appendChild(activityDiv);
-        });
-        const activityModal = bootstrap.Modal.getInstance(document.getElementById('activityModal'));
-        activityModal.hide();
-      });
-
-      saveButton.addEventListener("click", () => {
-        const device = {
-          name: nameInput.value,
-          device_ids,
-          conditions: [...activeConditions],
-          factors: [...otherFactorsDiv.querySelectorAll("div")].map(div => {
-            const [key, value] = div.querySelector("span").innerText.split(": ");
-            return { key, value };
-          }),
-          activities,
-          timestamp
-        };
-
-        axios.post("http://localhost:5000/save", device)
-          .then(() => console.log("Data saved successfully"))
-          .catch(err => console.error("Error saving data:", err));
-      });
-
-      clearButton.addEventListener("click", () => {
-        nameInput.value = "";
-        device_ids = [];
-        activities = [];
-        deviceInput.value = "";
-        activityGroup.innerHTML = "";
-        activeConditions.clear();
-        otherFactorsDiv.innerHTML = "";
-        updateConditions();
-        updateDevicePills();
-      });
-
-      // Timestamp Logic
-      nowButton.addEventListener("click", () => {
-        timestamp = new Date().toISOString();  // Set timestamp to current time
-        nowButton.classList.add("active");  // Highlight NOW button
-        customButton.classList.remove("active");  // Unhighlight Custom button
-        customButton.disabled = false;  // Enable Custom button
-        customTimeInput.classList.add("d-none");  // Hide custom datetime picker
-      });
-
-      customButton.addEventListener("click", () => {
-        nowButton.classList.remove("active");  // Unhighlight NOW button
-        customButton.classList.add("active");  // Highlight Custom button
-        customTimeInput.classList.remove("d-none");  // Show custom datetime picker
-      });
-
-      customTimeInput.addEventListener("change", (event) => {
-        timestamp = new Date(event.target.value).toISOString();
-      });
-    });
+    function downloadJSON() {
+      const jsonString = JSON.stringify(datasets, null, 2);
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "filtered_records.json";
+      a.click();
+    }
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>
