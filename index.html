@@ -117,6 +117,7 @@
 
         datasets = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
+        console.log("Datasets :-",datasets);
         // Apply filters
         datasets = datasets.filter(dataset => {
           const datasetDate = parseTimestamp(dataset.timestamp);
